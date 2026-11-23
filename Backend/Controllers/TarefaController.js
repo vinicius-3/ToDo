@@ -77,4 +77,81 @@ export default class tarefaController {
       return res.status(500).json({ message: "Erro ao buscar todas as tarefas", error: error.message });
     }
   };
+
+   static async getOne(req, res) {
+    const { id } = req.params;
+
+    if (!Tarefa.isValidId(id)) {
+      return res.status(422).json({ message: "Id inválido" });
+    }
+
+    try {
+      const tarefa = await Tarefa.findById(id);
+      if (!tarefa) {
+        return res.status(404).json({ message: "Tarefa não encontrada" });
+      }
+      return res.status(200).json(tarefa);
+    } catch (error) {
+      return res.status(500).json({ message: "Erro ao buscar uma tarefa", error: error.message });
+    }
+  };
+
+  static async updateParcial(req, res) {
+    try {
+      const { id } = req.params;
+      const { situacao } = req.body;
+
+      if (!Tarefa.isValidId(id)) {
+        return res.status(422).json({ message: "Id inválido" });
+      }
+      if (!situacao) {
+        return res.status(422).json({ message: "Situação não informada" });
+      }
+
+      const updatedTarefa = await Tarefa.updateSituacao(id, situacao);
+      if (!updatedTarefa) {
+        return res.status(404).json({ message: "Tarefa não encontrada" });
+      }
+
+      return res.status(200).json({ message: "Situação alterada com sucesso", updatedTarefa });
+    } catch (error) {
+      return res.status(500).json({ message: "Erro ao alterar a situação da tarefa", error: error.message });
+    }
+  };
+
+  static async updateCompleta(req, res) {
+    try {
+      const { id } = req.params;
+      const { titulo, descricao, dataLimite, situacao } = req.body;
+
+      if (!Tarefa.isValidId(id)) {
+        return res.status(422).json({ message: "Id inválido" });
+      }
+      if (!titulo || !descricao || !dataLimite || !situacao) {
+        return res.status(422).json({ message: "Todos os dados da tarefa são obrigatórios" });
+      }
+
+      const dataFormatada = formatDateToMySQL(dataLimite);
+      if (!dataFormatada) {
+        return res.status(422).json({ message: "Data limite inválida" });
+      }
+
+      const updateData = {
+        titulo,
+        descricao,
+        dataLimite: dataFormatada,
+        situacao,
+      };
+
+      const updatedTarefa = await Tarefa.updateCompleta(id, updateData);
+      if (!updatedTarefa) {
+        return res.status(404).json({ message: "Tarefa não encontrada" });
+      }
+
+      return res.status(200).json({ message: "Tarefa alterada com sucesso", updatedTarefa });
+    } catch (error) {
+      return res.status(500).json({ message: "Erro ao alterar a  tarefa", error: error.message });
+    }
+  };
 }
+
